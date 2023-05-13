@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
 #include <vector>
 
@@ -14,94 +15,153 @@ extern "C" {
 #include "VideoDecoder.h"
 
 
-void save_frame_png(AVFrame* frame, int width, int height, int frame_number) {
-    AVFormatContext* format_ctx = nullptr;
-    AVCodecContext* codec_ctx = nullptr;
-    //AVOutputFormat* output_fmt = nullptr;
-    AVStream* stream = nullptr;
-    //AVCodec* encoder = nullptr;
-
-    char filename[32];
-    snprintf(filename, sizeof(filename), "frame_%04d.png", frame_number);
-
-    avformat_alloc_output_context2(&format_ctx, nullptr, nullptr, filename);
-    if (!format_ctx) {
-        throw std::runtime_error("Cannot create output context");
+void save_frame_jpg(AVFrame *frame, int width, int height, int frame_number, const char *outputFolder) {
+    
+    const AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_MJPEG);
+    if (!codec) {
+        std::cerr << "Codec not found" << std::endl;
+        exit(1);
     }
 
-    const AVOutputFormat *output_fmt = format_ctx->oformat;
-    const AVCodec *encoder = avcodec_find_encoder(output_fmt->video_codec);
-    if (!encoder) {
-        throw std::runtime_error("Cannot find PNG encoder");
-    }
-
-    stream = avformat_new_stream(format_ctx, encoder);
-    if (!stream) {
-        throw std::runtime_error("Cannot create output stream");
-    }
-
-    codec_ctx = avcodec_alloc_context3(encoder);
+    AVCodecContext *codec_ctx = avcodec_alloc_context3(codec);
     if (!codec_ctx) {
-        throw std::runtime_error("Cannot allocate codec context");
+        std::cerr << "Could not allocate codec context" << std::endl;
+        exit(1);
     }
-
     codec_ctx->width = width;
     codec_ctx->height = height;
-    codec_ctx->pix_fmt = AV_PIX_FMT_RGB24;
-    //codec_ctx->time_base = (AVRational){ 1, 1 };
-    codec_ctx->time_base.den = 1;
+    codec_ctx->pix_fmt = codec->pix_fmts[0];
+
     codec_ctx->time_base.num = 1;
-    if (avcodec_open2(codec_ctx, encoder, nullptr) < 0) {
-        throw std::runtime_error("Cannot open PNG encoder");
-    }
-
-    if (avcodec_parameters_from_context(stream->codecpar, codec_ctx) < 0) {
-        throw std::runtime_error("Cannot copy codec parameters");
-    }
-
-    if (!(output_fmt->flags & AVFMT_NOFILE)) {
-        if (avio_open(&format_ctx->pb, filename, AVIO_FLAG_WRITE) < 0) {
-            throw std::runtime_error("Cannot open output file");
-        }
-    }
-
-    if (avformat_write_header(format_ctx, nullptr) < 0) {
-        throw std::runtime_error("Error writing PNG header");
+    codec_ctx->time_base.den = 25;
+    
+    if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
+        std::cerr << "Could not open codec" << std::endl;
+        exit(1);
     }
 
     AVPacket pkt;
-    if (avcodec_send_frame(codec_ctx, frame) < 0) {
-        throw std::runtime_error("Error sending frame to PNG encoder");
+    av_init_packet(&pkt);
+    pkt.data = nullptr;
+    pkt.size = 0;
+
+    int ret;
+    int got_output;
+    if ((ret = avcodec_send_frame(codec_ctx, frame)) < 0) {
+        char err_msg[AV_ERROR_MAX_STRING_SIZE];
+        av_make_error_string(err_msg, AV_ERROR_MAX_STRING_SIZE, ret);
+        std::cerr << "Error sending a frame for encoding: " << err_msg << std::endl;
+        exit(1);
     }
 
-    int ret = avcodec_receive_packet(codec_ctx, &pkt);
-    if (ret < 0 && ret != AVERROR_EOF) {
-        throw std::runtime_error("Error receiving packet from PNG encoder");
+    if ((ret = avcodec_receive_packet(codec_ctx, &pkt)) < 0) {
+        std::cerr << "Error during encoding" << std::endl;
+        exit(1);
+    }
+    char filename[1024];
+    snprintf(filename, sizeof(filename), "%s/frame_%04d.jpg", outputFolder, frame_number);
+    std::ofstream jpg_file(filename, std::ios::binary);
+    jpg_file.write(reinterpret_cast<char *>(pkt.data), pkt.size);
+    jpg_file.close();
+
+    av_packet_unref(&pkt);
+    avcodec_free_context(&codec_ctx);
+}
+void save_frame_png(AVFrame* frame, int width, int height, int frame_number, const char *outputFolder) {
+    av_log_set_level(AV_LOG_DEBUG);
+    
+    const AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_PNG);
+    if (!codec) {
+        std::cerr << "Codec not found" << std::endl;
+        exit(1);
+    }
+    
+    AVCodecContext *codec_ctx = avcodec_alloc_context3(codec);
+    if (!codec_ctx) {
+        std::cerr << "Could not allocate codec context" << std::endl;
+        exit(1);
+    }
+    codec_ctx->width = width;
+    codec_ctx->height = height;
+    codec_ctx->pix_fmt = AV_PIX_FMT_RGB24;
+    codec_ctx->time_base.num = 1;
+    codec_ctx->time_base.den = 25;
+    
+    
+    
+    
+    if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
+        std::cerr << "Could not open codec" << std::endl;
+        exit(1);
+    }
+    
+    AVFrame *rgb_frame = av_frame_alloc();
+    if (!rgb_frame) {
+        fprintf(stderr, "Could not allocate frame\n");
+        exit(1);
     }
 
-    if (ret >= 0) {
-        av_write_frame(format_ctx, &pkt);
-        av_packet_unref(&pkt);
+    int num_bytes = av_image_get_buffer_size(AV_PIX_FMT_RGB24, codec_ctx->width, codec_ctx->height, 1);
+    uint8_t *rgb_frame_buffer = (uint8_t *)av_malloc(num_bytes * sizeof(uint8_t));
+    if (!rgb_frame_buffer) {
+        fprintf(stderr, "Could not allocate frame buffer\n");
+        exit(1);
     }
 
-    av_write_trailer(format_ctx);
+    av_image_fill_arrays(rgb_frame->data, rgb_frame->linesize, rgb_frame_buffer, AV_PIX_FMT_RGB24, codec_ctx->width, codec_ctx->height, 1);
 
-    if (codec_ctx) {
-        avcodec_close(codec_ctx);
-        avcodec_free_context(&codec_ctx);
+    rgb_frame->width = codec_ctx->width;
+    rgb_frame->height = codec_ctx->height;
+    rgb_frame->format = codec_ctx->pix_fmt;
+    
+    struct SwsContext *sws_ctx = sws_getContext(frame->width, frame->height, (AVPixelFormat)frame->format, rgb_frame->width, rgb_frame->height, AV_PIX_FMT_RGB24, SWS_BILINEAR, NULL, NULL, NULL);
+    if (!sws_ctx) {
+        fprintf(stderr, "Could not initialize the conversion context\n");
+        exit(1);
     }
 
-    if (format_ctx && !(output_fmt->flags & AVFMT_NOFILE)) {
-        avio_closep(&format_ctx->pb);
-    }
+    sws_scale(sws_ctx, (const uint8_t *const *)frame->data, frame->linesize, 0, frame->height, rgb_frame->data, rgb_frame->linesize);
 
-    avformat_free_context(format_ctx);
+    
+    AVPacket pkt;
+    av_init_packet(&pkt);
+    pkt.data = nullptr;
+    pkt.size = 0;
+    
+    
+    int ret;
+    int got_output;
+    if ((ret = avcodec_send_frame(codec_ctx, rgb_frame)) < 0) {
+        char err_msg[AV_ERROR_MAX_STRING_SIZE];
+        av_make_error_string(err_msg, AV_ERROR_MAX_STRING_SIZE, ret);
+        std::cerr << "Error sending a frame for encoding: " << err_msg << std::endl;
+        exit(1);
+    }
+    
+    if ((ret = avcodec_receive_packet(codec_ctx, &pkt)) < 0) {
+        std::cerr << "Error during encoding" << std::endl;
+        exit(1);
+    }
+    char filename[1024];
+    snprintf(filename, sizeof(filename), "%s/frame_%04d.png", outputFolder, frame_number);
+    std::ofstream jpg_file(filename, std::ios::binary);
+    jpg_file.write(reinterpret_cast<char *>(pkt.data), pkt.size);
+    jpg_file.close();
+    
+    av_packet_unref(&pkt);
+    avcodec_free_context(&codec_ctx);
+    avcodec_close(codec_ctx);
+    av_free(codec_ctx);
+    av_frame_free(&rgb_frame);
+    av_free(rgb_frame_buffer);
+    sws_freeContext(sws_ctx);
 }
 
-void save_frame(AVFrame* frame, int width, int height, int frame_number) {
+void save_frame(AVFrame* frame, int width, int height, int frame_number, const char *outputFolder) {
+    printf("%d, %d\n", frame->width, frame->height);
     FILE* file;
-    char filename[32];
-    snprintf(filename, sizeof(filename), "frame-%04d.ppm", frame_number);
+    char filename[1024];
+    snprintf(filename, sizeof(filename), "%s/frame-%04d.ppm", outputFolder, frame_number);
 
     file = fopen(filename, "wb");
     if (!file) {
@@ -119,7 +179,7 @@ void save_frame(AVFrame* frame, int width, int height, int frame_number) {
 
 int NaiveDecoding(int argc, char* argv[]) {
     const char* input_filename = argv[1];
-
+    const char* output_folder = argv[2];
     //av_register_all();
 
     AVFormatContext* format_ctx = nullptr;
@@ -205,7 +265,7 @@ int NaiveDecoding(int argc, char* argv[]) {
                     SwsContext* sws_ctx = sws_getContext(codec_ctx->width, codec_ctx->height, codec_ctx->pix_fmt, codec_ctx->width, codec_ctx->height, AV_PIX_FMT_RGB24, SWS_BILINEAR, nullptr, nullptr, nullptr);
                     sws_scale(sws_ctx, frame->data, frame->linesize, 0, codec_ctx->height, frame_rgb->data, frame_rgb->linesize);
 
-                    save_frame(frame_rgb, codec_ctx->width, codec_ctx->height, frame_number);
+                    save_frame(frame_rgb, codec_ctx->width, codec_ctx->height, frame_number, output_folder);
                     std::cout << "Saved frame " << frame_number << " as an image file." << std::endl;
 
                     av_frame_free(&frame_rgb);
@@ -237,7 +297,7 @@ int NaiveDecoding(int argc, char* argv[]) {
 
 int FastDecoding(int argc, char* argv[]) {
     const char* input_filename = argv[1];
-
+    const char* output_folder = argv[3];
     //av_register_all();
 
 	AVFormatContext *format_ctx = avformat_alloc_context();
@@ -315,7 +375,7 @@ int FastDecoding(int argc, char* argv[]) {
 	uint8_t *rgb_data = (uint8_t *)av_malloc(av_image_get_buffer_size(AV_PIX_FMT_RGB24, codec_ctx->width, codec_ctx->height, 1));
 	AVFrame *rgb_frame = av_frame_alloc();
 	av_image_fill_arrays(rgb_frame->data, rgb_frame->linesize, rgb_data, AV_PIX_FMT_RGB24, codec_ctx->width, codec_ctx->height, 1);
-
+    
 	int decoded_frame_count = 0;
 	bool frame_found = false;
 	while (!frame_found && av_read_frame(format_ctx, &packet) >= 0) {
@@ -333,26 +393,14 @@ int FastDecoding(int argc, char* argv[]) {
 		av_packet_unref(&packet);
 
 		if (frame_found) {
-			AVFrame* frame_rgb = av_frame_alloc();
-			if (!frame_rgb) {
-				throw std::runtime_error("Cannot allocate RGB frame");
-			}
-
-			uint8_t* buffer = nullptr;
-			int num_bytes = av_image_get_buffer_size(AV_PIX_FMT_RGB24, codec_ctx->width, codec_ctx->height, 1);
-			buffer = (uint8_t*)av_malloc(num_bytes * sizeof(uint8_t));
-
-			av_image_fill_arrays(frame_rgb->data, frame_rgb->linesize, buffer, AV_PIX_FMT_RGB24, codec_ctx->width, codec_ctx->height, 1);
-
-			SwsContext* sws_ctx = sws_getContext(codec_ctx->width, codec_ctx->height, codec_ctx->pix_fmt, codec_ctx->width, codec_ctx->height, AV_PIX_FMT_RGB24, SWS_BILINEAR, nullptr, nullptr, nullptr);
-			sws_scale(sws_ctx, frame->data, frame->linesize, 0, codec_ctx->height, frame_rgb->data, frame_rgb->linesize);
-
-			save_frame(frame_rgb, codec_ctx->width, codec_ctx->height, 1);
+			
+			sws_scale(sws_ctx, frame->data, frame->linesize, 0, codec_ctx->height, rgb_frame->data, rgb_frame->linesize);
+            printf("%d, %d\n", frame->width, frame->height);
+			//save_frame(rgb_frame, codec_ctx->width, codec_ctx->height, 1, output_folder);
+            save_frame_png(frame, codec_ctx->width, codec_ctx->height, 1, output_folder);
+            save_frame_jpg(frame, codec_ctx->width, codec_ctx->height, 1, output_folder);
 			std::cout << "Saved frame " << 1 << " as an image file." << std::endl;
 
-			av_frame_free(&frame_rgb);
-			av_free(buffer);
-			sws_freeContext(sws_ctx);
 			break;
 		}
 	}

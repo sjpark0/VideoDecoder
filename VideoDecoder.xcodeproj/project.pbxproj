@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A4DE9D62A0FCE50009606C9 /* FrameDecoding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4DE9D32A0FCE50009606C9 /* FrameDecoding.cpp */; };
+		0A4DE9D72A0FCE50009606C9 /* FindIFrame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4DE9D42A0FCE50009606C9 /* FindIFrame.cpp */; };
 		0A5FF9672A0F78BE00C4B95B /* VideoDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5FF9662A0F78BE00C4B95B /* VideoDecoder.cpp */; };
 		0A681A1E2A0E4DDA00252FE3 /* libavutil.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A681A172A0E4DDA00252FE3 /* libavutil.dylib */; };
 		0A681A1F2A0E4DDA00252FE3 /* libswresample.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A681A182A0E4DDA00252FE3 /* libswresample.dylib */; };
@@ -30,6 +32,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0A4DE9D32A0FCE50009606C9 /* FrameDecoding.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FrameDecoding.cpp; sourceTree = "<group>"; };
+		0A4DE9D42A0FCE50009606C9 /* FindIFrame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FindIFrame.cpp; sourceTree = "<group>"; };
+		0A4DE9D52A0FCE50009606C9 /* VideoDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoDecoder.h; sourceTree = "<group>"; };
 		0A5FF9662A0F78BE00C4B95B /* VideoDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VideoDecoder.cpp; sourceTree = "<group>"; };
 		0A681A152A0E483800252FE3 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../../../opt/homebrew/Cellar/ffmpeg/6.0/lib; sourceTree = "<group>"; };
 		0A681A172A0E4DDA00252FE3 /* libavutil.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.dylib; path = ../../../../opt/homebrew/Cellar/ffmpeg/6.0/lib/libavutil.dylib; sourceTree = "<group>"; };
@@ -96,6 +101,9 @@
 			isa = PBXGroup;
 			children = (
 				0A5FF9662A0F78BE00C4B95B /* VideoDecoder.cpp */,
+				0A4DE9D42A0FCE50009606C9 /* FindIFrame.cpp */,
+				0A4DE9D32A0FCE50009606C9 /* FrameDecoding.cpp */,
+				0A4DE9D52A0FCE50009606C9 /* VideoDecoder.h */,
 			);
 			path = VideoDecoder;
 			sourceTree = "<group>";
@@ -157,6 +165,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A4DE9D62A0FCE50009606C9 /* FrameDecoding.cpp in Sources */,
+				0A4DE9D72A0FCE50009606C9 /* FindIFrame.cpp in Sources */,
 				0A5FF9672A0F78BE00C4B95B /* VideoDecoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

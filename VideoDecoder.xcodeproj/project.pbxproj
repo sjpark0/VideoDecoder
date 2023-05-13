@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A5FF9672A0F78BE00C4B95B /* VideoDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5FF9662A0F78BE00C4B95B /* VideoDecoder.cpp */; };
 		0A681A1E2A0E4DDA00252FE3 /* libavutil.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A681A172A0E4DDA00252FE3 /* libavutil.dylib */; };
 		0A681A1F2A0E4DDA00252FE3 /* libswresample.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A681A182A0E4DDA00252FE3 /* libswresample.dylib */; };
 		0A681A202A0E4DDA00252FE3 /* libavfilter.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A681A192A0E4DDA00252FE3 /* libavfilter.dylib */; };
@@ -14,7 +15,6 @@
 		0A681A222A0E4DDA00252FE3 /* libavdevice.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A681A1B2A0E4DDA00252FE3 /* libavdevice.dylib */; };
 		0A681A232A0E4DDA00252FE3 /* libavformat.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A681A1C2A0E4DDA00252FE3 /* libavformat.dylib */; };
 		0A681A242A0E4DDA00252FE3 /* libavcodec.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A681A1D2A0E4DDA00252FE3 /* libavcodec.dylib */; };
-		0AF459122A0E441E00CB4600 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF459112A0E441E00CB4600 /* main.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -30,6 +30,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0A5FF9662A0F78BE00C4B95B /* VideoDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VideoDecoder.cpp; sourceTree = "<group>"; };
 		0A681A152A0E483800252FE3 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../../../opt/homebrew/Cellar/ffmpeg/6.0/lib; sourceTree = "<group>"; };
 		0A681A172A0E4DDA00252FE3 /* libavutil.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.dylib; path = ../../../../opt/homebrew/Cellar/ffmpeg/6.0/lib/libavutil.dylib; sourceTree = "<group>"; };
 		0A681A182A0E4DDA00252FE3 /* libswresample.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.dylib; path = ../../../../opt/homebrew/Cellar/ffmpeg/6.0/lib/libswresample.dylib; sourceTree = "<group>"; };
@@ -39,7 +40,6 @@
 		0A681A1C2A0E4DDA00252FE3 /* libavformat.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.dylib; path = ../../../../opt/homebrew/Cellar/ffmpeg/6.0/lib/libavformat.dylib; sourceTree = "<group>"; };
 		0A681A1D2A0E4DDA00252FE3 /* libavcodec.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.dylib; path = ../../../../opt/homebrew/Cellar/ffmpeg/6.0/lib/libavcodec.dylib; sourceTree = "<group>"; };
 		0AF4590E2A0E441E00CB4600 /* VideoDecoder */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = VideoDecoder; sourceTree = BUILT_PRODUCTS_DIR; };
-		0AF459112A0E441E00CB4600 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,7 +95,7 @@
 		0AF459102A0E441E00CB4600 /* VideoDecoder */ = {
 			isa = PBXGroup;
 			children = (
-				0AF459112A0E441E00CB4600 /* main.cpp */,
+				0A5FF9662A0F78BE00C4B95B /* VideoDecoder.cpp */,
 			);
 			path = VideoDecoder;
 			sourceTree = "<group>";
@@ -157,7 +157,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AF459122A0E441E00CB4600 /* main.cpp in Sources */,
+				0A5FF9672A0F78BE00C4B95B /* VideoDecoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

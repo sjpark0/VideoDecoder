@@ -36,11 +36,12 @@ int FindIFrame(int argc, char* argv[]) {
     }
 
     AVPacket* packet = av_packet_alloc();
-
+	int frame = 0;
     while (av_read_frame(format_ctx, packet) >= 0) {
         if (packet->stream_index == video_stream_index && (packet->flags & AV_PKT_FLAG_KEY)) {
-            std::cout << "I-Frame found at position " << packet->pos << ", PTS: " << packet->pts << std::endl;
+            std::cout << "I-Frame found at position " << packet->pos << ", PTS: " << packet->pts << ",frame : " << frame << std::endl;
         }
+		frame++;
         av_packet_unref(packet);
     }
 
